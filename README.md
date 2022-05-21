@@ -27,7 +27,8 @@ python版本：3.9.x
 做了两个版本，一个入口是`app.py`，另一个入口是`app2.py`
 
 ### 启动命令
-`python hello-jina2/app.py` 或 `python hello-jina2/app2.py`
+`cd hello-jina2`
+`python app.py` 或 `python app2.py`
 
 `app.py`是原demo的升级版，存在`MemberError`问题，仅支持索引视频前35s
 `app2.py`是基于`CLIP`新写的，支持各种长度视频，目前`ffmpeg`没有接完，只能将视频手动生成图片后测试
