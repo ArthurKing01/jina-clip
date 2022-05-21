@@ -30,6 +30,8 @@ def check_search(resp: DataRequest):
 config()
 
 f = Flow(protocol="http").add(
+    uses='videoLoader/config.yml',uses_requests={"/index": "extract"}, name="video_loader"
+    ).add(
         uses="customClipImage/config.yml",
         name="image_encoder",
         uses_requests={"/index": "encode"}

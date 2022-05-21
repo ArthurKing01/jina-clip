@@ -70,13 +70,14 @@ class CLIPImageEncoder(Executor):
                 for d in batch_docs:
                     print('in clip image d.uri', d.uri)
                     # tensor = self._generate_input_features(tensors_batch)
-                    image = self.preprocessor(Image.open(d.uri)).unsqueeze(0).to(self.device)
-                    embedding = self.model.encode_image(image)
+                    tensors_batch = [self.model.encode_image(self.preprocessor(Image.fromarray(c.tensor)).unsqueeze(0).to(self.device)) for c in d.chunks]
+                    
+                    embedding = tensors_batch # self.model.encode_image(image)
                     # print(embedding)
                     embedding = np.array(embedding).astype('float32')
                     # print(embedding)
 
-                    d.embedding = embedding[0]
+                    d.embedding = embedding
         print('clip_image encode end')
         print(docs.embeddings.shape)
         
