@@ -10,7 +10,7 @@ def config():
     os.environ['TOP_K'] = '20'  # the maximal number of results to return
 
 def get_docs(data_path):
-    for fn in glob.glob(os.path.join(data_path, '*.jpg')):
+    for fn in glob.glob(os.path.join(data_path, '*.mp4')):
         yield Document(uri=fn, id=os.path.basename(fn))
 
 def check_index(resp: DataRequest):
@@ -51,7 +51,7 @@ f = Flow(protocol="http").add(
 with f:
     f.post(
         '/index', 
-        inputs=get_docs('toy_data/sports'),
+        inputs=get_docs('toy_data'),
         on_done=check_index
         )
     a = f.post(

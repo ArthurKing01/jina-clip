@@ -96,7 +96,7 @@ class CLIPImageEncoder(Executor):
             for batch_docs in document_batches_generator:
                 print('in for')
                 for d in batch_docs:
-                    tensors_batch = [c.tensor for c in d.chunks[0:35]]
+                    tensors_batch = [c.tensor for c in filter(lambda x: x.modality == 'image', d.chunks)]
                     if self.use_default_preprocessing:
                         tensor = self._generate_input_features(tensors_batch)
                     else:

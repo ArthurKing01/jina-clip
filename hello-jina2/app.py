@@ -29,14 +29,14 @@ def check_search(resp: DataRequest):
 
 config()
 
-f = Flow().add(
+f = Flow(protocol='http').add(
     uses='videoLoader/config.yml',uses_requests={"/index": "extract"}, name="video_loader"
     ).add(
-        uses="customClipImage/config.yml",
+        uses="clipImage/config.yml",
         name="image_encoder",
         uses_requests={"/index": "encode"}
     ).add(
-        uses="customClipText/config.yml",
+        uses="clipText/config.yml",
         name="text_encoder",
     ).add(
         uses="indexer/config.yml",
@@ -54,7 +54,7 @@ with f:
         inputs=get_docs('toy_data'),
         on_done=check_index
         )
-    a = f.post(
+    f.post(
                 on='/search',
                 inputs=DocumentArray([
                     Document(text='a girl'),
@@ -62,3 +62,4 @@ with f:
                     Document(text='Sports Shoes'),
                 ]),
                 on_done=check_search)
+    f.block()

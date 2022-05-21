@@ -94,8 +94,8 @@ class SimpleIndexer(Executor):
         newDArr = DocumentArray.empty(self._index[traversal_right].embeddings.shape[1])
         newDArr.embeddings = self._index[traversal_right].embeddings[0]
         for i,d in enumerate(self._index[traversal_right][0].chunks):
-            print(i, d.location)
-            if i<35:
+            if (d.location and len(d.location) > 0):
+                print(i, d.location)
                 newDArr[i].location = d.location
         docs[traversal_left].match(newDArr, **match_args)
         # docs[traversal_left].match(self._index[traversal_right], **match_args)
