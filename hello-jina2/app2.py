@@ -18,18 +18,34 @@ def check_index(resp: DataRequest):
     for doc in resp.docs:
         print(f'check_index: {doc.uri}')
 
+def getTime(t: int):
+    m,s = divmod(t, 60)
+    h, m = divmod(m, 60)
+    t_str = "%02d:%02d:%02d" % (h, m, s)
+    print (t_str)
+    return t_str
+
+def cutVideo(start_t: str, length: int, input: str, output: str):
+    os.system(f'ffmpeg -ss {start_t} -i {input} -t {length} -c:v copy -c:a copy output/{output}')
+
 def check_search(resp: DataRequest):
-    for doc in resp.docs:
+    for i, doc in enumerate(resp.docs):
         print(f'Query text: {doc.text}')
         print(f'Matches: {len(doc.matches)}')
         for m in doc.matches:
             print(m)
-            print(f'+- id: {m.id}, score: {m.scores["cosine"].value}, timestampe: {m.uri}')
+            print(f'+- id: {m.id}, score: {m.tags["maxImageScore"]}, indexRange: {m.tags["leftIndex"]}-{m.tags["rightIndex"]}, uri: {m.tags["uri"]}')
         print('-'*10)
+
+        # leftIndex = doc.matches[0].tags["leftIndex"]
+        # rightIndex = doc.matches[0].tags["rightIndex"]
+        # t_str = getTime(leftIndex)
+
+        # cutVideo(t_str, rightIndex - leftIndex, doc.matches[0].tags["uri"], f"match_{i}_{doc.matches[0].id}.mp4")
 
 config()
 
-f = Flow(protocol="http").add(
+f = Flow(protocol="http", port=os.environ['JINA_PORT']).add(
     uses='videoLoader/config.yml',uses_requests={"/index": "extract"}, name="video_loader"
     ).add(
         uses="customClipImage/config.yml",
@@ -42,18 +58,19 @@ f = Flow(protocol="http").add(
         uses="customIndexer/config.yml",
         name="indexer",
         uses_metas={"workspace": os.environ['JINA_WORKSPACE']}
-    ).add(
-        uses="customRanker/config.yml",
-        name="ranker",
     )
+    # .add(
+    #     uses="customRanker/config.yml",
+    #     name="ranker",
+    # )
 
 
 with f:
-    f.post(
-        '/index', 
-        inputs=get_docs('toy_data'),
-        on_done=check_index
-        )
+    # f.post(
+    #     '/index', 
+    #     inputs=get_docs('toy_data'),
+    #     on_done=check_index
+    #     )
     a = f.post(
                 on='/search',
                 inputs=DocumentArray([

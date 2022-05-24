@@ -74,16 +74,15 @@ class CLIPImageEncoder(Executor):
                     for c in d.chunks:
                         if (c.modality == 'image'):
                             image_embedding = self.model.encode_image(self.preprocessor(Image.fromarray(c.tensor)).unsqueeze(0).to(self.device))
-                            tensors_batch.append(image_embedding)
+                            # tensors_batch.append(image_embedding)
+                            tensors_batch.append(np.array(image_embedding).astype('float32'))
                     embedding = tensors_batch
                     # print(np.asarray(Image.open(d.uri)).shape)
                     # image = self.preprocessor(Image.fromarray(np.asarray(Image.open(d.uri)))).unsqueeze(0).to(self.device)
                     # embedding = self.model.encode_image(image)
                     # print(embedding)
-                    embedding = np.array(embedding).astype('float32')
+                    # embedding = np.array(embedding).astype('float32')
                     # print(embedding)
-
                     d.embedding = embedding
         print('clip_image encode end')
-        print(docs.embeddings.shape)
         

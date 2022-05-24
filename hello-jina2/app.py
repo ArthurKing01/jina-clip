@@ -24,7 +24,7 @@ def check_search(resp: DataRequest):
         print(f'Matches: {len(doc.matches)}')
         for m in doc.matches:
             print(m)
-            print(f'+- id: {m.id}, score: {m.scores["cosine"].value}, timestampe: {m.tags["timestamp"]}')
+            print(f'+- id: {m.id}, score: {m.scores["cosine"].value}, timestampe: {m.tags["timestamp"]}, range: {m.tags["leftTimestamp"]} - {m.tags["rightTimestamp"]}')
         print('-'*10)
 
 config()
@@ -49,17 +49,17 @@ f = Flow(protocol='http').add(
 
 
 with f:
-    f.post(
-        '/index', 
-        inputs=get_docs('toy_data'),
-        on_done=check_index
-        )
+    # f.post(
+    #     '/index', 
+    #     inputs=get_docs('toy_data'),
+    #     on_done=check_index
+    #     )
     f.post(
                 on='/search',
                 inputs=DocumentArray([
-                    Document(text='a girl'),
+                    Document(text='a diagram'),
                     Document(text='sports bracelet'),
-                    Document(text='Sports Shoes'),
+                    # Document(text='Sports Shoes'),
                 ]),
                 on_done=check_search)
-    f.block()
+    # f.block()

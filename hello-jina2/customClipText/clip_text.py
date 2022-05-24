@@ -82,7 +82,8 @@ class CLIPTextEncoder(Executor):
             text_batch = docs_batch.texts
 
             with torch.inference_mode():
-                input_tokens = [self.model.encode_text(clip.tokenize([t]).to(self.device)) for t in text_batch] # self._generate_input_tokens(text_batch)
+                input_tokens = [self.model.encode_text(clip.tokenize([t, "unknown"]).to(self.device)) for t in text_batch] # self._generate_input_tokens(text_batch)
                 embeddings = input_tokens # self.model.get_text_features(**input_tokens).cpu().numpy()
                 for doc, embedding in zip(docs_batch, embeddings):
-                    doc.embedding = np.array(embedding).astype('float32')[0]
+                    doc.embedding = embedding
+                    # doc.embedding = np.array(embedding).astype('float32')[0]

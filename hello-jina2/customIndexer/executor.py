@@ -4,6 +4,8 @@ from typing import Dict, Optional
 
 from jina import DocumentArray, Executor, requests
 from jina.logging.logger import JinaLogger
+import clip
+from torch import Tensor
 
 
 class SimpleIndexer(Executor):
@@ -18,10 +20,12 @@ class SimpleIndexer(Executor):
 
     def __init__(
         self,
+        pretrained_model_name_or_path: str = 'ViT-B/32',
         match_args: Optional[Dict] = None,
         table_name: str = 'simple_indexer_table2',
         traversal_right: str = '@r',
         traversal_left: str = '@r',
+        device: str = 'cpu',
         **kwargs,
     ):
         """
@@ -48,6 +52,15 @@ class SimpleIndexer(Executor):
         self.logger = JinaLogger(self.metas.name)
         self.default_traversal_right = traversal_right
         self.default_traversal_left = traversal_left
+
+        self.pretrained_model_name_or_path = pretrained_model_name_or_path
+
+        self.device = device
+
+        model, preprocessor = clip.load(self.pretrained_model_name_or_path, device=device)
+        
+        self.preprocessor = preprocessor
+        self.model = model
 
     @property
     def table_name(self) -> str:
@@ -89,8 +102,37 @@ class SimpleIndexer(Executor):
         )
         traversal_left = parameters.get('traversal_left', self.default_traversal_left)
         match_args = SimpleIndexer._filter_match_params(docs, match_args)
-        print('in indexer',docs[traversal_left].embeddings.shape, self._index[traversal_right].embeddings.shape)
-        
+        print('in indexer',docs[traversal_left].embeddings.shape, self._index[traversal_right])
+        texts: DocumentArray = docs[traversal_left]
+        stored_docs: DocumentArray = self._index[traversal_right]
+
+        for text in texts:
+            result = []
+            text_features = text.embedding
+            for sd in stored_docs:
+                images_features = sd.embedding
+                for i, image_features in enumerate(images_features):
+                    tensor = Tensor(image_features)
+                    probs = self.score(tensor, text_features)
+                    result.append({
+                        "score": probs[0][0],
+                        "index": i,
+                        "uri": sd.uri,
+                        "id": sd.id
+                    })
+
+            index_list = self.getMultiRange(result)
+            print(index_list)
+            docArr = DocumentArray.empty(len(index_list))
+            for i, doc in enumerate(docArr):
+                doc.tags["leftIndex"] = index_list[i]["leftIndex"]
+                doc.tags["rightIndex"] = index_list[i]["rightIndex"]
+                # print(index_list[i])
+                doc.tags["maxImageScore"] = float(index_list[i]["maxImage"]["score"])
+                doc.tags["uri"] = index_list[i]["maxImage"]["uri"]
+                doc.tags["maxIndex"] = index_list[i]["maxImage"]["index"]
+            print(docArr)
+            text.matches = docArr
         # newDArr = DocumentArray.empty(self._index[traversal_right].embeddings.shape[0])
         # newDArr.embeddings = self._index[traversal_right].embeddings
         # for i,d in enumerate(self._index[traversal_right]):
@@ -98,7 +140,81 @@ class SimpleIndexer(Executor):
         #     newDArr[i].uri = d.uri
 
         # docs[traversal_left].match(newDArr, **match_args)
-        docs[traversal_left].match(self._index[traversal_right], **match_args)
+        # docs[traversal_left].match(self._index[traversal_right], **match_args)
+
+    def getMultiRange(self, result: list, thod = 0.1, maxCount: int = 10):
+        ignore_range = {}
+        index_list = []
+        for i in range(maxCount):
+            maxItem = self.getNextMaxItem(result, ignore_range)
+            if maxItem is None:
+                break
+            print(maxItem["score"])
+            leftIndex, rightIndex, maxImage = self.getRange(maxItem, result, thod, ignore_range)
+            index_list.append({
+                "leftIndex": leftIndex,
+                "rightIndex": rightIndex,
+                "maxImage": maxImage
+            })
+            if maxImage["uri"] in ignore_range:
+                ignore_range[maxImage["uri"]] += list(range(leftIndex, rightIndex + 1))
+            else:
+                ignore_range[maxImage["uri"]] = list(range(leftIndex, rightIndex + 1))
+        # print(ignore_range)
+        return index_list
+
+    def getNextMaxItem(self, result: list, ignore_range: dict[list]):
+        maxItem = None
+        for item in result:
+            if item["uri"] in ignore_range and item["index"] in ignore_range[item["uri"]]:
+                continue
+            if maxItem is None:
+                maxItem = item
+            if item["score"] > maxItem["score"]:
+                maxItem = item
+        return maxItem
+    
+    def getRange(self, maxItem, result: list, thod = 0.1, ignore_range: list[int] = None):
+        maxImageScore = maxItem["score"]
+        maxImageUri = maxItem["uri"]
+        maxIndex = maxItem["index"]
+        leftIndex = maxIndex
+        rightIndex = maxIndex
+        has_ignore_range = ignore_range is not None
+
+        d_result = list(filter(lambda x: x["uri"] == maxImageUri, result))
+        for i in range(maxIndex):
+            prev_index = maxIndex - 1 - i
+            if has_ignore_range and prev_index in ignore_range:
+                break
+            if d_result[prev_index]["score"] >= maxImageScore - thod:
+                leftIndex = prev_index
+            else:
+                break
+
+        for i in range(maxIndex+1, len(d_result)):
+            if has_ignore_range and i in ignore_range:
+                break
+            if d_result[i]["score"] >= maxImageScore - thod:
+                rightIndex = i
+            else:
+                break
+        return leftIndex, rightIndex, d_result[maxIndex]
+
+    def score(self, image_features, text_features):
+
+        logit_scale = self.model.logit_scale.exp()
+        # normalized features
+        image_features = image_features / image_features.norm(dim=1, keepdim=True)
+        text_features = text_features / text_features.norm(dim=1, keepdim=True)
+
+        # cosine similarity as logits
+        
+        logits_per_image = logit_scale * image_features @ text_features.t()
+        probs = logits_per_image.softmax(dim=-1).cpu().detach().numpy()
+
+        # print(" img Label probs:", probs)
+        return probs
 
     @staticmethod
     def _filter_match_params(docs, match_args):

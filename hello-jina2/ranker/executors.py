@@ -9,7 +9,14 @@ from jina import Document, Executor, requests
 _ALLOWED_METRICS = ['min', 'max', 'mean_min', 'mean_max']
 DEFAULT_FPS = 1
 
+MAX_LENGTH = 100
+THOD = 0.02
 
+def find(list: list, fn):
+    for i in list:
+        if fn(i):
+            return i
+    return None
 class SimpleRanker(Executor):
     """
     Aggregate the matches and overwrite document.matches with the aggregated results.
@@ -46,6 +53,7 @@ class SimpleRanker(Executor):
                 parents_matches[m.parent_id].append(m)
             new_matches = []
             for match_parent_id, matches in parents_matches.items():
+                print([{"location": m.location, "scores": m.scores[self.metric]} for m in matches])
                 best_id = 0
                 if self.ranking == 'min':
                     best_id = np.argmin([m.scores[self.metric].value for m in matches])
@@ -56,10 +64,42 @@ class SimpleRanker(Executor):
                 new_match.scores = {self.metric: matches[best_id].scores[self.metric]}
                 print(new_match.scores)
                 print(matches, best_id, matches[best_id].location)
-                timestamp = matches[best_id].location[0]
+                location = matches[best_id].location[0]
+                timestamp = location
                 new_match.tags['timestamp'] = float(timestamp) / DEFAULT_FPS
-                vid = new_match.id.split('.')[0]
-                new_match.uri = f'https://www.youtube.com/watch?v={vid}'
+                # vid = new_match.id.split('.')[0]
+                # new_match.uri = f'https://www.youtube.com/watch?v={vid}'
+
+                leftLocation = location
+                rightLocation = location
+
+                for i in range(int(location)):
+                    prev_location = location - i - 1
+                    m = find(matches, lambda x: x.location[0] == prev_location and x.scores[self.metric].value <= new_match.scores[self.metric].value - THOD)
+                    if m is None:
+                        m = find(matches, lambda x: x.location[0] == prev_location-1 and x.scores[self.metric].value <= new_match.scores[self.metric].value - THOD)
+                        if m is None:
+                            break
+                        else:
+                            leftLocation = m.location[0]
+                    else:
+                        leftLocation = m.location[0]
+
+                for i in range(int(location) + 1, int(location) + MAX_LENGTH):
+                    
+                    m = find(matches, lambda x: x.location[0] == i and x.scores[self.metric].value <= new_match.scores[self.metric].value - THOD)
+                    if m is None:
+                        m = find(matches, lambda x: x.location[0] == i + 1 and x.scores[self.metric].value <= new_match.scores[self.metric].value - THOD)
+                        if m is None:
+                            break
+                        else:
+                            rightLocation = m.location[0]
+                    else:
+                        rightLocation = m.location[0]
+
+                new_match.tags['leftTimestamp'] = float(leftLocation) / DEFAULT_FPS
+                new_match.tags['rightTimestamp'] = float(rightLocation) / DEFAULT_FPS
+
                 new_matches.append(new_match)
 
             # Sort the matches
