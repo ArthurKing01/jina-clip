@@ -37,15 +37,15 @@ def check_search(resp: DataRequest):
             print(f'+- id: {m.id}, score: {m.tags["maxImageScore"]}, indexRange: {m.tags["leftIndex"]}-{m.tags["rightIndex"]}, uri: {m.tags["uri"]}')
         print('-'*10)
 
-        # leftIndex = doc.matches[0].tags["leftIndex"]
-        # rightIndex = doc.matches[0].tags["rightIndex"]
-        # t_str = getTime(leftIndex)
+        leftIndex = doc.matches[0].tags["leftIndex"]
+        rightIndex = doc.matches[0].tags["rightIndex"]
+        t_str = getTime(leftIndex)
 
-        # cutVideo(t_str, rightIndex - leftIndex, doc.matches[0].tags["uri"], f"match_{i}_{doc.matches[0].id}.mp4")
+        cutVideo(t_str, rightIndex - leftIndex, doc.matches[0].tags["uri"], f"match_{i}_{doc.matches[0].id}.mp4")
 
 config()
 
-f = Flow(protocol="http", port=os.environ['JINA_PORT']).add(
+f = Flow(port=os.environ['JINA_PORT']).add(
     uses='videoLoader/config.yml',uses_requests={"/index": "extract"}, name="video_loader"
     ).add(
         uses="customClipImage/config.yml",
@@ -66,18 +66,18 @@ f = Flow(protocol="http", port=os.environ['JINA_PORT']).add(
 
 
 with f:
-    # f.post(
-    #     '/index', 
-    #     inputs=get_docs('toy_data'),
-    #     on_done=check_index
-    #     )
+    f.post(
+        '/index', 
+        inputs=get_docs('toy_data'),
+        on_done=check_index
+        )
     a = f.post(
                 on='/search',
                 inputs=DocumentArray([
-                    Document(text='a girl'),
+                    Document(text='a diagram'),
                     Document(text='sports bracelet'),
-                    Document(text='Sports Shoes'),
+                    Document(text='a man on the grassland'),
                     Document(text='two people'),
                 ]),
                 on_done=check_search)
-    f.block()
+    # f.block()
