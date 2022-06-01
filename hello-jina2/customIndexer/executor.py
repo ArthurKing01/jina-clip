@@ -120,8 +120,8 @@ class SimpleIndexer(Executor):
                         "uri": sd.uri,
                         "id": sd.id
                     })
-
-            index_list = self.getMultiRange(result)
+            print(parameters, type(parameters.get("thod")))
+            index_list = self.getMultiRange(result,parameters.get("thod", 0.1) )
             print(index_list)
             docArr = DocumentArray.empty(len(index_list))
             for i, doc in enumerate(docArr):

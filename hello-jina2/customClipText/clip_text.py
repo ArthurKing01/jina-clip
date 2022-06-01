@@ -56,9 +56,6 @@ class CLIPTextEncoder(Executor):
         # self.model = CLIPModel.from_pretrained(self.pretrained_model_name_or_path)
         # self.model.eval().to(device)
 
-    @requests
-    def index(self, docs: DocumentArray, parameters: Dict, **kwargs):
-        print('clip_text index')
 
     @requests
     def encode(self, docs: DocumentArray, parameters: Dict, **kwargs):

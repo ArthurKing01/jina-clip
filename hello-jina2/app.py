@@ -29,7 +29,7 @@ def check_search(resp: DataRequest):
 
 config()
 
-f = Flow(protocol='http').add(
+f = Flow().add(
     uses='videoLoader/config.yml',uses_requests={"/index": "extract"}, name="video_loader"
     ).add(
         uses="clipImage/config.yml",
@@ -49,11 +49,11 @@ f = Flow(protocol='http').add(
 
 
 with f:
-    # f.post(
-    #     '/index', 
-    #     inputs=get_docs('toy_data'),
-    #     on_done=check_index
-    #     )
+    f.post(
+        '/index', 
+        inputs=get_docs('toy_data'),
+        on_done=check_index
+        )
     f.post(
                 on='/search',
                 inputs=DocumentArray([

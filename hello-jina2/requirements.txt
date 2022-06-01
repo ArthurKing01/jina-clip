@@ -8,3 +8,4 @@ tqdm==4.64.0
 transformers==4.9.1
 scipy==1.8.0
 pillow==9.1.0
+tornado==6.1

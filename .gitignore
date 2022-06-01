@@ -4,6 +4,4 @@ venv*
 
 */**/__pycache__
 .DS_Store
-*/**/toy_data
 */**.zip
-*/output

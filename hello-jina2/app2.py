@@ -14,7 +14,6 @@ def get_docs(data_path):
         yield Document(uri=fn, id=os.path.basename(fn))
 
 def check_index(resp: DataRequest):
-    print(resp.data)
     for doc in resp.docs:
         print(f'check_index: {doc.uri}')
 
@@ -26,7 +25,7 @@ def getTime(t: int):
     return t_str
 
 def cutVideo(start_t: str, length: int, input: str, output: str):
-    os.system(f'ffmpeg -ss {start_t} -i {input} -t {length} -c:v copy -c:a copy output/{output}')
+    os.system(f'ffmpeg -ss {start_t} -i {input} -t {length} -c:v copy -c:a copy static/output/{output}')
 
 def check_search(resp: DataRequest):
     for i, doc in enumerate(resp.docs):
@@ -41,11 +40,11 @@ def check_search(resp: DataRequest):
         rightIndex = doc.matches[0].tags["rightIndex"]
         t_str = getTime(leftIndex)
 
-        cutVideo(t_str, rightIndex - leftIndex, doc.matches[0].tags["uri"], f"match_{i}_{doc.matches[0].id}.mp4")
+        # cutVideo(t_str, rightIndex - leftIndex, doc.matches[0].tags["uri"], f"match_{i}_{doc.matches[0].id}.mp4")
 
 config()
 
-f = Flow(port=os.environ['JINA_PORT']).add(
+f = Flow(protocol="grpc", port=os.environ['JINA_PORT']).add(
     uses='videoLoader/config.yml',uses_requests={"/index": "extract"}, name="video_loader"
     ).add(
         uses="customClipImage/config.yml",
@@ -54,6 +53,7 @@ f = Flow(port=os.environ['JINA_PORT']).add(
     ).add(
         uses="customClipText/config.yml",
         name="text_encoder",
+        uses_requests={"/search": "encode"}
     ).add(
         uses="customIndexer/config.yml",
         name="indexer",
@@ -66,18 +66,22 @@ f = Flow(port=os.environ['JINA_PORT']).add(
 
 
 with f:
-    f.post(
-        '/index', 
-        inputs=get_docs('toy_data'),
-        on_done=check_index
-        )
-    a = f.post(
-                on='/search',
-                inputs=DocumentArray([
-                    Document(text='a diagram'),
-                    Document(text='sports bracelet'),
-                    Document(text='a man on the grassland'),
-                    Document(text='two people'),
-                ]),
-                on_done=check_search)
-    # f.block()
+    # f.post(
+    #     '/index', 
+    #     inputs=get_docs('static/videos'),
+    #     on_done=check_index
+    #     )
+    # a = f.post(
+    #             on='/search',
+    #             inputs=DocumentArray([
+    #                 # Document(text='a diagram'),
+    #                 # Document(text='sports bracelet'),
+    #                 # Document(text='a man on the grassland'),
+    #                 # Document(text='two people'),
+    #                 Document(text='whip up an egg'),
+    #                 Document(text='Fried meat pie'),
+    #                 Document(text='Turn over the pancake'),
+    #                 Document(text='Squeeze the tomato sauce')
+    #             ]),
+    #             on_done=check_search)
+    f.block()
