@@ -106,10 +106,14 @@ class SimpleIndexer(Executor):
         texts: DocumentArray = docs[traversal_left]
         stored_docs: DocumentArray = self._index[traversal_right]
 
+        doc_ids = parameters.get("doc_ids")
+
         for text in texts:
             result = []
             text_features = text.embedding
             for sd in stored_docs:
+                if doc_ids is not None and sd.uri not in doc_ids:
+                    continue
                 images_features = sd.embedding
                 for i, image_features in enumerate(images_features):
                     tensor = Tensor(image_features)

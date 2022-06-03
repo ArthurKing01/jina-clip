@@ -19,13 +19,14 @@ export class AppController {
   }
 
   @Post('search')
-  async search(@Body() body: {texts: string[], thod: number}) {
+  async search(@Body() body: {texts: string[], thod: number, doc_ids: string[]}) {
     const data = body.texts.map(item => ({
       text: item
     }))
     const res = await axios.post(`${baseURL}/search`, {
       data,
-      thod: body.thod
+      thod: body.thod,
+      doc_ids: body.doc_ids
     }, {
       headers: {
         "Content-Type": "application/json"
@@ -64,6 +65,11 @@ export class AppController {
     return this.appService.listOutput()
   }
 
+  @Get('listSource')
+  listSource() {
+    return this.appService.listSource()
+  }
+
   @Post('rename')
   rename(@Body() body: { source: string, target: string }) {
     return this.appService.rename(body.source, body.target)
@@ -96,6 +102,27 @@ export class AppController {
         "Content-Type": "application/json"
       }
     })
+    return res.data
+  }
+  @Post("deleteDoc")
+  async deleteDoc(@Body() body: { doc_ids: string[] }): Promise<ResponseEntity> {
+    if (!body.doc_ids) {
+      return {
+        code: 1,
+        message: "doc_ids is undefined"
+      }
+    }
+
+    const res = await axios.post<ResponseEntity>(`${baseURL}/deleteDoc`, {
+      doc_ids: body.doc_ids,
+    }, {
+      headers: {
+        "Content-Type": "application/json"
+      }
+    })
+    for (const id of body.doc_ids) {
+      fs.unlinkSync(path.join(videosDir, id))
+    }
     return res.data
   }
 }

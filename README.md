@@ -23,18 +23,12 @@ python版本：3.9.x
 ### 安装CLIP
 `pip install git+https://github.com/openai/CLIP.git`
 
-## 使用方式
-做了两个版本，一个入口是`app.py`，另一个入口是`app2.py`
+### 安装pick依赖
+`cd pick && yarn`
 
-### 启动命令
-`cd hello-jina2`
-`python app.py` 或 `python app2.py`
+## 启动
+在pick目录下
+`yarn start`
 
-`app.py`是原demo的升级版，存在`MemberError`问题，仅支持索引视频前35s
-`app2.py`是基于`CLIP`新写的，支持各种长度视频，目前`ffmpeg`没有接完，只能将视频手动生成图片后测试
-
-### 视频目录
-`hello-jina2/toy_data`,通过`app(2).py`里的`get_docs`方法构造`Document`
-
-### 利用`ffmpeg`生成图片（临时方法，app2.py需要）
-`ffmpeg -i 1.mp4 -r 1 -f image2 image1-%03d.jpg`
+## 访问地址
+`http://localhost:3001/public`

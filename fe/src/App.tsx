@@ -1,11 +1,13 @@
-import { baseURL, clearDbAndSourceVideo, existVideo, listOutput, search, TSearchResultItem } from './services'
+import { baseURL, clearDbAndSourceVideo, existVideo, listOutput, listSource, search, TSearchResultItem } from './services'
 import 'antd/dist/antd.css';
 import { Upload, UploadProps, Button, Input, Divider, message, Modal } from 'antd'
 import { useCallback, useState } from 'react';
 import { ResultItem } from './components/ResultItem';
 import { AppContext } from './context';
 import { LoadingOutlined } from '@ant-design/icons';
-import { OutputVideos } from './components/OutputVideos';
+import { FileListWrapper } from './components/FileListWrapper';
+import { UploadChangeParam } from 'antd/lib/upload';
+import { UploadFile } from 'antd/lib/upload/interface';
 
 const TextArea = Input.TextArea
 
@@ -33,11 +35,23 @@ function App() {
   const [loading, setLoading] = useState(false)
 
   const [outputList, setOutputList] = useState<string[]>([])
+  const [sourceList, setSourceList] = useState<string[]>([])
+
+  const [sourceDocIds, setSourceDocIds] = useState<string[]>([])
 
   const fetchListOut = useCallback(async () => {
     const res = await listOutput()
     setOutputList(res.data.data)
   }, [])
+  const fetchListSource = useCallback(async () => {
+    const res = await listSource()
+    setSourceList(res.data.data)
+  }, [])
+
+  const updateTextResult = useCallback((item: TSearchResultItem, index: number) => {
+    textResult[index] = item
+    setTextResult([...textResult])
+  }, [textResult])
 
   const updateMatch = useCallback((m: TSearchResultItem['matches'][0], index: number) => {
     matches[index] = m
@@ -57,11 +71,15 @@ function App() {
       return
     }
     setLoading(true)
-    const res = await search(text.split(/[,.，。]/).map(i => i.trim()).filter(Boolean), Number(thod) || 0.1)
+    const res = await search(
+      text.split(/[,.，。]/).map(i => i.trim()).filter(Boolean), 
+      Number(thod) || 0.1,
+      sourceDocIds.length > 0 ? sourceDocIds : undefined
+      )
     setTextResult(res.data.data)
     setMatches(res.data.data.map(item => item.matches[0]))
     setLoading(false)
-  }, [text, thod])
+  }, [text, thod, sourceDocIds])
 
   const handleClear = useCallback(() => {
     Modal.confirm({
@@ -69,9 +87,17 @@ function App() {
       content: "清空后不可恢复",
       onOk: async () => {
         await clearDbAndSourceVideo()
+        location.reload()
       }
     })
   }, [])
+
+  const handleFileChange: (info: UploadChangeParam<UploadFile<any>>) => void = (info) => {
+    if (info.file.status === 'done') {
+      message.success("上传成功！")
+      fetchListSource()
+    }
+  }
 
   return (
     <AppContext.Provider value={{
@@ -79,7 +105,12 @@ function App() {
       matches,
       updateMatch,
       outputList,
-      fetchListOut
+      fetchListOut,
+      sourceList,
+      fetchListSource,
+      sourceDocIds,
+      setSourceDocIds,
+      updateTextResult
     }}>
       <div className="App">
         <div style={{ display: 'flex' }}>
@@ -90,7 +121,7 @@ function App() {
             <div style={{ marginBottom: '10px' }}>
               <Button danger onClick={handleClear}>清空数据库与源视频文件</Button>
             </div>
-            <Upload {...options}>
+            <Upload {...options} onChange={handleFileChange}>
               <Button>上传mp4视频文件</Button>
             </Upload>
 
@@ -101,8 +132,7 @@ function App() {
             <Button onClick={handleSearch}>搜索</Button>
           </div>
           <div>
-            <div>output视频</div>
-            <OutputVideos />
+            <FileListWrapper />
           </div>
         </div>
 

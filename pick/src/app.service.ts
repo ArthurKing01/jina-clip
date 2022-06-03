@@ -54,6 +54,14 @@ export class AppService {
       data: files.filter(f => f.endsWith('.mp4'))
     }
   }
+  listSource(): ResponseEntity<string[]> {
+    const files = fs.readdirSync(videosDir)
+    return {
+      code: 0,
+      message: 'ok',
+      data: files.filter(f => f.endsWith('.mp4'))
+    }
+  }
 
   listVideos() {
     return fs.readdirSync(videosDir).filter(f => f.endsWith('.mp4'))

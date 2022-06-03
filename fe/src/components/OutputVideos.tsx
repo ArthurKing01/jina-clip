@@ -80,7 +80,7 @@ export const OutputVideos = () => {
                     <a key="list-loadmore-edit" onClick={() => handleRename(item)}>重命名</a>, 
                     <a key="list-loadmore-more" onClick={() => handleDownload(item)}>下载</a>,
                     <a key="list-loadmore-view" onClick={() => handleView(item)}>预览</a>,
-                    <a key="list-loadmore-view" onClick={() => handleDelete(item)}>删除</a>,
+                    <a key="list-loadmore-delete" onClick={() => handleDelete(item)}>删除</a>,
                 ]}
                 >
                     <div>{item}</div>

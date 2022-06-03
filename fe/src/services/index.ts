@@ -23,9 +23,10 @@ export type TSearchResultItem = {
     }[]
 }
 
-export const search = (texts: string[], thod: number) => axios.post<ResponseEntity<TSearchResultItem[]>>(`${baseURL}/search`, {
+export const search = (texts: string[], thod: number, doc_ids?: string[]) => axios.post<ResponseEntity<TSearchResultItem[]>>(`${baseURL}/search`, {
     texts,
-    thod
+    thod,
+    doc_ids
 }, {
     headers: {
         "Content-Type": "application/json"
@@ -36,6 +37,8 @@ export const search = (texts: string[], thod: number) => axios.post<ResponseEnti
 
 
 export const listOutput = () => axios.get<ResponseEntity<string[]>>(`${baseURL}/listOutput`)
+
+export const listSource = () => axios.get<ResponseEntity<string[]>>(`${baseURL}/listSource`)
 
 export const rename = (source: string, target: string) => axios.post<ResponseEntity>(`${baseURL}/rename`, {
     source,
@@ -72,6 +75,14 @@ export const cutVideo = (data: {
     uri: string
     mid: string
 }) => axios.post<ResponseEntity>(`${baseURL}/cut`, data, {
+    headers: {
+        "Content-Type": "application/json"
+    }
+})
+
+export const deleteSourceVideo = (data: {
+    doc_ids: string[]
+}) => axios.post<ResponseEntity>(`${baseURL}/deleteDoc`, data, {
     headers: {
         "Content-Type": "application/json"
     }

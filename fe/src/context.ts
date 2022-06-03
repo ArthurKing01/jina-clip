@@ -7,6 +7,11 @@ export type TContextProps = {
     updateMatch: (m: TSearchResultItem['matches'][0], index: number) => void
     outputList: string[]
     fetchListOut: () => Promise<void>
+    sourceList: string[]
+    fetchListSource: () => Promise<void>
+    sourceDocIds: string[]
+    setSourceDocIds: (ids: string[]) => void
+    updateTextResult: (item: TSearchResultItem, index: number) => void
 }
 
 export const AppContext = React.createContext<TContextProps>({
@@ -14,6 +19,11 @@ export const AppContext = React.createContext<TContextProps>({
     matches: [],
     updateMatch: () => {},
     outputList: [],
-    fetchListOut: async () => {}
+    sourceList: [],
+    fetchListSource: async () => {},
+    fetchListOut: async () => {},
+    sourceDocIds: [],
+    setSourceDocIds: () => {},
+    updateTextResult: () => {} 
 })
 

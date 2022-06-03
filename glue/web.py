@@ -39,7 +39,10 @@ class SearchHandler(tornado.web.RequestHandler):
         data = json.loads(self.request.body.decode('utf-8'))
         print(data)
         inputs = DocumentArray([Document(text=doc["text"]) for doc in data["data"]])
-        async for resp in c.post('/search', inputs=inputs, parameters={"thod": data["thod"] if "thod" in data else None}):
+        async for resp in c.post('/search', inputs=inputs, parameters={
+            "thod": data["thod"] if "thod" in data else None,
+            "doc_ids": data["doc_ids"] if "doc_ids" in data else None,
+            }):
             print(resp)
         # print(res)
             self.write({
@@ -64,11 +67,25 @@ class CutHandler(tornado.web.RequestHandler):
             "message": "ok"
         })
 
+class DeleteDoc(tornado.web.RequestHandler):
+    async def post(self):
+        data = json.loads(self.request.body.decode('utf-8'))
+        print(data)
+        async for resp in c.post('/delete', parameters={"ids": data["doc_ids"] if "doc_ids" in data else None}):
+            print(resp)
+        # print(res)
+            self.write({
+                "code": 0,
+                "message": "ok"
+            })
+            self.finish()
+
 def make_app():
     return tornado.web.Application([
         tornado.web.url(r"/", MainHandler),
         tornado.web.url(r"/search", SearchHandler),
-        tornado.web.url(r"/cut", CutHandler)
+        tornado.web.url(r"/cut", CutHandler),
+        tornado.web.url(r"/deleteDoc", DeleteDoc)
     ])
 
 if __name__ == "__main__":
