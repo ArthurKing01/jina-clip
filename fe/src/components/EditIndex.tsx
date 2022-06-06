@@ -50,8 +50,8 @@ export const EditIndex = ({
 
     const { updateMatch, updateTextResult } = useContext(AppContext)
 
-    const [left, setLeft] = useState(currentMatch.tags.leftIndex)
-    const [right, setRight] = useState(currentMatch.tags.rightIndex)
+    const [left, setLeft] = useState(currentMatch?.tags.leftIndex)
+    const [right, setRight] = useState(currentMatch?.tags.rightIndex)
 
     const [playing, setPlaying] = useState(false)
 
@@ -63,6 +63,7 @@ export const EditIndex = ({
     const [totalDuration, setTotalDuration] = useState(1)
 
     useEffect(() => {
+        if (!currentMatch) return
         setLeft(currentMatch.tags.leftIndex)
         setRight(currentMatch.tags.rightIndex)
     }, [currentMatch])
@@ -153,7 +154,7 @@ export const EditIndex = ({
         <div>
             <div style={{ width: "200px", margin: "0 auto" }}>
                 <Video
-                    src={getUri(currentMatch.tags.uri)}
+                    src={getUri(currentMatch?.tags.uri || "")}
                     leftIndex={left}
                     rightIndex={right}
                     videoRef={editVideoRef}
