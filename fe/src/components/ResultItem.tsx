@@ -5,9 +5,17 @@ import { cutVideo, TSearchResultItem } from "../services"
 import { Video } from "./Video"
 import { EditIndex } from "./EditIndex"
 import { getUri } from "../utils"
+import { createUseStyles } from "react-jss"
 
 
-
+const useStyle = createUseStyles({
+    card: {
+        "& .ant-card-head-wrapper": {
+            flexWrap: "wrap"
+        }
+    },
+    
+})
 
 
 
@@ -15,6 +23,7 @@ export const ResultItem = ({ item, index }: { item: TSearchResultItem, index: nu
 
     const { matches, updateMatch, fetchListOut } = useContext(AppContext)
 
+    const classes = useStyle()
     const [modalVisible, setModalVisible] = useState(false)
 
     const videoRef = useRef<HTMLVideoElement>(null)
@@ -57,7 +66,7 @@ export const ResultItem = ({ item, index }: { item: TSearchResultItem, index: nu
     }
 
     return <>
-        <Card size="small" title={item.text} extra={currentMatch && <>
+        <Card className={classes.card} size="small" title={item.text} extra={currentMatch && <>
             <Button type="link" onClick={handleEditD}>编辑时长</Button>
             <Button type="link" onClick={handleCut}>生成剪切</Button>
         </>} style={{ width: 200 }}>

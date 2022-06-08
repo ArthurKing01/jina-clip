@@ -68,7 +68,7 @@ class CLIPImageEncoder(Executor):
             for batch_docs in document_batches_generator:
                 print('in for')
                 for d in batch_docs:
-                    print('in clip image d.uri', d.uri)
+                    print('in clip image d.uri', d.uri, len(d.chunks))
                     # tensor = self._generate_input_features(tensors_batch)
                     tensors_batch = []
                     for c in d.chunks:

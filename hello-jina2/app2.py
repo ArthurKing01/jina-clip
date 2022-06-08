@@ -78,10 +78,9 @@ with f:
     #                 # Document(text='sports bracelet'),
     #                 # Document(text='a man on the grassland'),
     #                 # Document(text='two people'),
-    #                 Document(text='whip up an egg'),
-    #                 Document(text='Fried meat pie'),
-    #                 Document(text='Turn over the pancake'),
-    #                 Document(text='Squeeze the tomato sauce')
+    #                 Document(text='Slide down'),
+    #                 Document(text='On the swings'),
+    #                 Document(text='Drink lots of water')
     #             ]),
     #             on_done=check_search)
     f.block()
