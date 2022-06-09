@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { AppService } from './app.service';
 import { FileInterceptor } from '@nestjs/platform-express'
 import axios from 'axios';
@@ -40,19 +40,30 @@ export class AppController {
   async upload(@UploadedFile() file, @Body() body): Promise<ResponseEntity> {
     console.log(file, body)
     const filePath = path.resolve(videosDir, file.originalname)
-    fs.writeFileSync(filePath, file.buffer)
-
-    await axios.post(`${baseURL}`, {
-      files: [
-        {
-          uri: path.join('static', 'videos', file.originalname)
+    try {
+      fs.writeFileSync(filePath, file.buffer)
+      Logger.log(`保存成功! path: ${filePath}`)
+    } catch(e) {
+      Logger.error(e)
+    }
+    
+    try {
+      await axios.post(`${baseURL}`, {
+        files: [
+          {
+            uri: path.join('static', 'videos', file.originalname)
+          }
+        ],
+      }, {
+        headers: {
+          "Content-Type": "application/json"
         }
-      ],
-    }, {
-      headers: {
-        "Content-Type": "application/json"
-      }
-    })
+      })
+      Logger.log(`tornado index succuss`)
+    } catch(e) {
+      Logger.error(e)
+    }
+    
     
     return {
       code: 0,
