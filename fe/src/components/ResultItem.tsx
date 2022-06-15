@@ -65,7 +65,7 @@ export const ResultItem = ({ item, index }: { item: TSearchResultItem; index: nu
       <Card
         className={classes.card}
         size="small"
-        title={`${item.text}[${item.matches.length}]`}
+        title={`${item.text} (${item.matches.length})`}
         actions={[<CloudDownloadOutlined onClick={handleCut} />, <EditOutlined onClick={handleEditD} />]}
         extra={
           item.matches.length > 0 && (
@@ -75,9 +75,9 @@ export const ResultItem = ({ item, index }: { item: TSearchResultItem; index: nu
                   {item.matches.map((m) => {
                     const basename = m.tags.uri.split('/').pop()
                     return (
-                      <Select.Option value={m.id} key={m.id}>{`[${m.tags.rightIndex - m.tags.leftIndex + 1}]${
-                        m.tags.leftIndex
-                      }-${m.tags.rightIndex} ${basename}`}</Select.Option>
+                      <Select.Option value={m.id} key={m.id}>{`[${Math.round(
+                        m.tags.rightIndex - m.tags.leftIndex + 1
+                      )}s] ${m.tags.leftIndex}-${m.tags.rightIndex} ${basename}`}</Select.Option>
                     )
                   })}
                 </Select>
@@ -85,6 +85,7 @@ export const ResultItem = ({ item, index }: { item: TSearchResultItem; index: nu
             </>
           )
         }
+        style={{ width: '100%', marginBottom: 20 }}
       >
         <Video
           src={getUri(currentMatch.tags.uri)}

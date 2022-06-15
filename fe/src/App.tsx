@@ -1,6 +1,6 @@
 import { listOutput, listSource, search, TSearchResultItem } from './services'
 import 'antd/dist/antd.css'
-import { Button, Input, Divider, message, Col, Row, Select, Form } from 'antd'
+import { Button, Input, Divider, message, Col, Row, Select, Form, Tabs } from 'antd'
 import { useCallback, useState } from 'react'
 import { ResultItem } from './components/ResultItem'
 import { AppContext } from './context'
@@ -99,18 +99,18 @@ function App() {
                 </Button>
               </Form.Item>
             </Form>
-            <Divider />
             {loading && <LoadingOutlined style={{ fontSize: '20px', margin: '10px' }} />}
             {!loading && (
               <div
                 style={{
                   display: 'flex',
+                  flexDirection: 'column',
                   alignItems: 'flex-start',
                 }}
               >
-                {textResult.map((item, index) => {
-                  return <ResultItem key={item.text + index} item={item} index={index} />
-                })}
+                {textResult.map((item, index) => (
+                  <ResultItem key={item.text + index} item={item} index={index} />
+                ))}
               </div>
             )}
           </Col>
