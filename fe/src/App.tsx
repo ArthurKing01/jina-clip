@@ -83,7 +83,12 @@ function App() {
           <Col span={15}>
             <Form layout="horizontal" onFinish={handleSearch}>
               <Form.Item label="描述语句" name="text">
-                <Select mode="tags" tokenSeparators={[',', '.']} placeholder={'按逗号和句号分割句子'}></Select>
+                <Select
+                  mode="tags"
+                  tokenSeparators={[',', '.']}
+                  placeholder={'按逗号和句号分割句子'}
+                  allowClear
+                ></Select>
               </Form.Item>
               <Form.Item label="阈值" name="thod">
                 <Input placeholder="相似度阈值，默认0.1，越小越相似，结果越精确，视频片段越短" />
