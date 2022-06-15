@@ -97,6 +97,7 @@ export const ResultItem = ({ item, index }: { item: TSearchResultItem, index: nu
         handleOk={handleOk} 
         item={item}
         index={index}
-        />
+      />
     </>
+  )
 }
