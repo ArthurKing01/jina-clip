@@ -8,6 +8,7 @@ from transformers import CLIPFeatureExtractor, CLIPModel
 import numpy as np
 import clip
 from PIL import Image
+import time
 
 class CLIPImageEncoder(Executor):
     """Encode image into embeddings using the CLIP model."""
@@ -56,8 +57,8 @@ class CLIPImageEncoder(Executor):
 
     @requests
     def encode(self, docs: DocumentArray, parameters: dict, **kwargs):
-        
-        print('clip_image encode')
+        t1 = time.time()
+        print('clip_image encode', t1)
         document_batches_generator =  DocumentArray(
             filter(
                 lambda x: x is not None,
@@ -84,5 +85,6 @@ class CLIPImageEncoder(Executor):
                     # embedding = np.array(embedding).astype('float32')
                     # print(embedding)
                     d.embedding = embedding
-        print('clip_image encode end')
+        t2 = time.time()
+        print('clip_image encode end', t2 - t1, t2)
         

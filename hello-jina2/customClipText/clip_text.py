@@ -1,12 +1,10 @@
-from typing import Dict, Optional, Sequence
-from unittest.util import _MAX_LENGTH
+from typing import Dict, Optional
 
 import torch
 from docarray import DocumentArray
 from jina import Executor, requests
-from transformers import CLIPModel, CLIPTokenizer
 import clip
-import numpy as np
+import time
 
 class CLIPTextEncoder(Executor):
     """Encode text into embeddings using the CLIP model."""
@@ -77,10 +75,15 @@ class CLIPTextEncoder(Executor):
         ).batch(batch_size=parameters.get('batch_size', self.batch_size)) :
 
             text_batch = docs_batch.texts
-
+            t1 = time.time()
             with torch.inference_mode():
                 input_tokens = [self.model.encode_text(clip.tokenize([t, "unknown"]).to(self.device)) for t in text_batch] # self._generate_input_tokens(text_batch)
                 embeddings = input_tokens # self.model.get_text_features(**input_tokens).cpu().numpy()
                 for doc, embedding in zip(docs_batch, embeddings):
                     doc.embedding = embedding
                     # doc.embedding = np.array(embedding).astype('float32')[0]
+            t2 = time.time()
+            print("encode text cost:", t2 - t1)
+            print(t1)
+            print(t2)
+

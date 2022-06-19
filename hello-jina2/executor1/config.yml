@@ -1,8 +1,0 @@
-jtype: MyExecutor
-with:
-  protocol: 'http'
-  cors: True
-  port_expose: $JINA_PORT
-metas:
-  py_modules:
-    - executor.py

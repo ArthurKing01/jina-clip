@@ -6,6 +6,8 @@ from jina import DocumentArray, Executor, requests
 from jina.logging.logger import JinaLogger
 import clip
 from torch import Tensor
+import torch
+import time
 
 
 class SimpleIndexer(Executor):
@@ -75,8 +77,13 @@ class SimpleIndexer(Executor):
         """All Documents to the DocumentArray
         :param docs: the docs to add
         """
+        t1 = time.time()
         if docs:
             self._index.extend(docs)
+        t2 = time.time()
+        print(t2 - t1)
+        print(t1)
+        print(t2)
 
     @requests(on='/search')
     def search(
@@ -102,49 +109,62 @@ class SimpleIndexer(Executor):
         )
         traversal_left = parameters.get('traversal_left', self.default_traversal_left)
         match_args = SimpleIndexer._filter_match_params(docs, match_args)
-        print('in indexer',docs[traversal_left].embeddings.shape, self._index[traversal_right])
+        # print('in indexer',docs[traversal_left].embeddings.shape, self._index[traversal_right])
         texts: DocumentArray = docs[traversal_left]
         stored_docs: DocumentArray = self._index[traversal_right]
 
         doc_ids = parameters.get("doc_ids")
-
-        for text in texts:
-            result = []
-            text_features = text.embedding
-            for sd in stored_docs:
-                if doc_ids is not None and sd.uri not in doc_ids:
-                    continue
-                images_features = sd.embedding
-                for i, image_features in enumerate(images_features):
-                    tensor = Tensor(image_features)
-                    probs = self.score(tensor, text_features)
-                    result.append({
-                        "score": probs[0][0],
-                        "index": i,
-                        "uri": sd.uri,
-                        "id": sd.id
-                    })
-            print(parameters, type(parameters.get("thod")))
-            index_list = self.getMultiRange(result,parameters.get("thod", 0.1) )
-            print(index_list)
-            docArr = DocumentArray.empty(len(index_list))
-            for i, doc in enumerate(docArr):
-                doc.tags["leftIndex"] = index_list[i]["leftIndex"]
-                doc.tags["rightIndex"] = index_list[i]["rightIndex"]
-                # print(index_list[i])
-                doc.tags["maxImageScore"] = float(index_list[i]["maxImage"]["score"])
-                doc.tags["uri"] = index_list[i]["maxImage"]["uri"]
-                doc.tags["maxIndex"] = index_list[i]["maxImage"]["index"]
-            print(docArr)
-            text.matches = docArr
-        # newDArr = DocumentArray.empty(self._index[traversal_right].embeddings.shape[0])
-        # newDArr.embeddings = self._index[traversal_right].embeddings
-        # for i,d in enumerate(self._index[traversal_right]):
-        #     print(i, d.uri, d.embedding)
-        #     newDArr[i].uri = d.uri
-
-        # docs[traversal_left].match(newDArr, **match_args)
-        # docs[traversal_left].match(self._index[traversal_right], **match_args)
+        t1 = time.time()
+        with torch.inference_mode():
+            t1_00 = time.time()
+            for text in texts:
+                result = []
+                text_features = text.embedding
+                text.embedding = None
+                for sd in stored_docs:
+                    if doc_ids is not None and sd.uri not in doc_ids:
+                        continue
+                    images_features = sd.embedding
+                    print('images len',len(images_features))
+                    t1_0 = time.time()
+                    tensor_images_features = [Tensor(image_features) for image_features in images_features]
+                    t1_1 = time.time()
+                    for i, image_features in enumerate(tensor_images_features):
+                        tensor = image_features
+                        probs = self.score(tensor, text_features)
+                        result.append({
+                            "score": probs[0][0],
+                            "index": i,
+                            "uri": sd.uri,
+                            "id": sd.id
+                        })
+                    t1_2 = time.time()
+                    print("tensor cost:", t1_1 - t1_0)
+                    print("part score cost:", t1_2 - t1_1)
+                    print(t1_0)
+                    print(t1_1)
+                    print(t1_2)
+                t2 = time.time()
+                print('score cost:', t2 - t1)
+                # print(parameters, type(parameters.get("thod")))
+                index_list = self.getMultiRange(result,0.1 if parameters.get("thod") is None else parameters.get('thod') )
+                t3 = time.time()
+                print('range cost:', t3 - t2)
+                print(t1)
+                print(t1_00)
+                print(t2)
+                print(t3)
+                # print(index_list)
+                docArr = DocumentArray.empty(len(index_list))
+                for i, doc in enumerate(docArr):
+                    doc.tags["leftIndex"] = index_list[i]["leftIndex"]
+                    doc.tags["rightIndex"] = index_list[i]["rightIndex"]
+                    # print(index_list[i])
+                    doc.tags["maxImageScore"] = float(index_list[i]["maxImage"]["score"])
+                    doc.tags["uri"] = index_list[i]["maxImage"]["uri"]
+                    doc.tags["maxIndex"] = index_list[i]["maxImage"]["index"]
+                # print(docArr)
+                text.matches = docArr
 
     def getMultiRange(self, result: list, thod = 0.1, maxCount: int = 10):
         ignore_range = {}
@@ -153,7 +173,7 @@ class SimpleIndexer(Executor):
             maxItem = self.getNextMaxItem(result, ignore_range)
             if maxItem is None:
                 break
-            print(maxItem["score"])
+            # print(maxItem["score"])
             leftIndex, rightIndex, maxImage = self.getRange(maxItem, result, thod, ignore_range)
             index_list.append({
                 "leftIndex": leftIndex,
@@ -191,6 +211,7 @@ class SimpleIndexer(Executor):
             prev_index = maxIndex - 1 - i
             if has_ignore_range and prev_index in ignore_range:
                 break
+            # print(maxImageScore, thod, maxImageUri, maxIndex)
             if d_result[prev_index]["score"] >= maxImageScore - thod:
                 leftIndex = prev_index
             else:

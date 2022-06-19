@@ -3,6 +3,7 @@ import tornado.web
 from jina import Client, DocumentArray, Document
 import json
 import os
+import time
 
 port = 45679
 c = Client(host=f"grpc://localhost:{port}", asyncio=True)
@@ -25,7 +26,12 @@ class MainHandler(tornado.web.RequestHandler):
         data = json.loads(self.request.body.decode('utf-8'))
         print(data)
         inputs = DocumentArray([Document(uri=file["uri"], id=os.path.basename(file["uri"]))  for file in data["files"] ])
+        t1 = time.time()
         async for resp in c.post('/index', inputs=inputs):
+            t2 = time.time()
+            print(t2 - t1)
+            print(t1)
+            print(t2)
             print(resp)
         # print(res)
             self.write({
@@ -38,11 +44,16 @@ class SearchHandler(tornado.web.RequestHandler):
     async def post(self):
         data = json.loads(self.request.body.decode('utf-8'))
         print(data)
+        t1 = time.time()
         inputs = DocumentArray([Document(text=doc["text"]) for doc in data["data"]])
         async for resp in c.post('/search', inputs=inputs, parameters={
             "thod": data["thod"] if "thod" in data else None,
             "doc_ids": data["doc_ids"] if "doc_ids" in data else None,
             }):
+            t2 = time.time()
+            print("cost:", t2 - t1)
+            print(t1)
+            print(t2)
             print(resp)
         # print(res)
             self.write({
@@ -90,5 +101,5 @@ def make_app():
 
 if __name__ == "__main__":
     app = make_app()
-    app.listen(8888)
+    app.listen(8900)
     tornado.ioloop.IOLoop.current().start()

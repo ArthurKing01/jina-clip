@@ -20,6 +20,9 @@ import webvtt
 from jina import Executor, requests
 from docarray import Document, DocumentArray
 from jina.logging.logger import JinaLogger
+from PIL import Image
+import math
+import time
 
 DEFAULT_FPS = 1.0
 DEFAULT_AUDIO_BIT_RATE = 160000
@@ -101,7 +104,8 @@ class VideoLoader(Executor):
         Possible values are `ffmpeg_audio_args`, `ffmpeg_video_args`, `librosa_load_args`. Check out more description in the `__init__()`.
         For example, `parameters={'ffmpeg_video_args': {'s': '512x320'}`.
         """
-        print('video_loader extract')
+        t1 = time.time()
+        print('video_loader extract', t1)
         for doc in docs:
             print(f'video chunks: {len(doc.chunks)}')
         for doc in docs:
@@ -126,11 +130,22 @@ class VideoLoader(Executor):
                         source_fn, doc.uri, ffmpeg_video_args
                     )
                     for idx, frame_tensor in enumerate(frame_tensors):
-                        print(frame_tensor.shape)
+                        # print(frame_tensor.shape)
                         self.logger.debug(f'frame: {idx}')
                         chunk = Document(modality='image')
-                        chunk.blob = frame_tensor
-                        chunk.tensor = np.array(frame_tensor).astype('uint8')
+                        # chunk.blob = frame_tensor
+                        max_size = 240
+                        img = Image.fromarray(frame_tensor)
+                        if img.size[0] > img.size[1]:
+                            width = max_size
+                            height = math.ceil(max_size / img.size[0] * img.size[1])
+                        else:
+                            height = max_size
+                            width = math.ceil(max_size / img.size[1] * img.size[0])
+                        img = img.resize((width, height))
+                        chunk.tensor = np.asarray(img).astype('uint8')
+                        print(chunk.tensor.shape)
+                        # chunk.tensor = np.array(frame_tensor).astype('uint8')
                         chunk.location = (np.uint32(idx),)
                         chunk.tags['timestamp'] = idx / self._frame_fps
                         if self._copy_uri:
@@ -138,39 +153,41 @@ class VideoLoader(Executor):
                         doc.chunks.append(chunk)
 
                 # add audio as chunks to the Document, modality='audio'
-                if 'audio' in self._modality:
-                    ffmpeg_audio_args = deepcopy(self._ffmpeg_audio_args)
-                    ffmpeg_audio_args.update(parameters.get('ffmpeg_audio_args', {}))
-                    librosa_load_args = deepcopy(self._librosa_load_args)
-                    librosa_load_args.update(parameters.get('librosa_load_args', {}))
-                    audio, sr = self._convert_video_uri_to_audio(
-                        source_fn, doc.uri, ffmpeg_audio_args, librosa_load_args
-                    )
-                    if audio is None:
-                        continue
-                    chunk = Document(modality='audio')
-                    chunk.tensor, chunk.tags['sample_rate'] = audio, sr
-                    if self._copy_uri:
-                        chunk.tags['video_uri'] = doc.uri
-                    doc.chunks.append(chunk)
+                # if 'audio' in self._modality:
+                #     ffmpeg_audio_args = deepcopy(self._ffmpeg_audio_args)
+                #     ffmpeg_audio_args.update(parameters.get('ffmpeg_audio_args', {}))
+                #     librosa_load_args = deepcopy(self._librosa_load_args)
+                #     librosa_load_args.update(parameters.get('librosa_load_args', {}))
+                #     audio, sr = self._convert_video_uri_to_audio(
+                #         source_fn, doc.uri, ffmpeg_audio_args, librosa_load_args
+                #     )
+                #     if audio is None:
+                #         continue
+                #     chunk = Document(modality='audio')
+                #     chunk.tensor, chunk.tags['sample_rate'] = audio, sr
+                #     if self._copy_uri:
+                #         chunk.tags['video_uri'] = doc.uri
+                #     doc.chunks.append(chunk)
 
                 # add subtitle ad chunks to the Document, modality='text'
-                if 'text' in self._modality:
-                    ffmpeg_subtitle_args = deepcopy(self._ffmpeg_subtitle_args)
-                    ffmpeg_subtitle_args.update(
-                        parameters.get('ffmpeg_subtitle_args', {})
-                    )
-                    subtitles = self._convert_video_uri_to_subtitle(
-                        source_fn, ffmpeg_subtitle_args, tmpdir
-                    )
-                    for idx, (beg, end, s) in enumerate(subtitles):
-                        chunk = Document(text=s, modality='text')
-                        chunk.tags['beg_in_seconds'] = beg
-                        chunk.tags['end_in_seconds'] = end
-                        if self._copy_uri:
-                            chunk.tags['video_uri'] = doc.uri
-                        chunk.location = (idx,)  # index of the subtitle in the video
-                        doc.chunks.append(chunk)
+                # if 'text' in self._modality:
+                #     ffmpeg_subtitle_args = deepcopy(self._ffmpeg_subtitle_args)
+                #     ffmpeg_subtitle_args.update(
+                #         parameters.get('ffmpeg_subtitle_args', {})
+                #     )
+                #     subtitles = self._convert_video_uri_to_subtitle(
+                #         source_fn, ffmpeg_subtitle_args, tmpdir
+                #     )
+                #     for idx, (beg, end, s) in enumerate(subtitles):
+                #         chunk = Document(text=s, modality='text')
+                #         chunk.tags['beg_in_seconds'] = beg
+                #         chunk.tags['end_in_seconds'] = end
+                #         if self._copy_uri:
+                #             chunk.tags['video_uri'] = doc.uri
+                #         chunk.location = (idx,)  # index of the subtitle in the video
+                #         doc.chunks.append(chunk)
+            t2 = time.time()
+            print(t2 - t1, t2)
 
     def _convert_video_uri_to_frames(self, source_fn, uri, ffmpeg_args):
         video_frames = []
@@ -185,7 +202,18 @@ class VideoLoader(Executor):
                 .output('pipe:', **ffmpeg_args)
                 .run(capture_stdout=True, quiet=True)
             )
-            video_frames = np.frombuffer(out, np.uint8).reshape([-1, h, w, 3])
+            # w = math.ceil(w / 1)
+            # h = math.ceil(h / 1)
+            # img = Image.frombuffer("RGB", (w, h), out)
+            # print(img.size)
+            video_frames = np.frombuffer(out, np.uint8) #.reshape([-1, h, w, 3])
+            # print(video_frames.shape)
+            video_frames = video_frames.reshape([-1, h, w, 3])
+            # img = Image.fromarray(video_frames)
+            # img = img.resize((math.ceil(img.size[0]/10), math.ceil(img.size[1] / 10)))
+            # print(img.size)
+            # video_frames = np.asarray(img).reshape([-1, h, w, 3])
+            # print("v2",video_frames.shape)
         except ffmpeg.Error as e:
             self.logger.error(f'Frame extraction failed, {uri}, {e.stderr}')
 

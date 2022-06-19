@@ -7,7 +7,7 @@ import fs from 'fs'
 import path from 'path'
 import { outputDir, videosDir } from './dirs';
 
-const baseURL = "http://localhost:8888"
+const baseURL = "http://localhost:8900"
 
 @Controller()
 export class AppController {

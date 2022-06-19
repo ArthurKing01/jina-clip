@@ -59,10 +59,6 @@ f = Flow(protocol="grpc", port=os.environ['JINA_PORT']).add(
         name="indexer",
         uses_metas={"workspace": os.environ['JINA_WORKSPACE']}
     )
-    # .add(
-    #     uses="customRanker/config.yml",
-    #     name="ranker",
-    # )
 
 
 with f:
