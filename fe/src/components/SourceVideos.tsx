@@ -2,33 +2,24 @@ import { List, message, Modal } from 'antd'
 import { useCallback, useContext, useEffect } from 'react'
 import { AppContext } from '../context'
 import { baseURLHost, deleteSourceVideo } from '../services'
+import { getUid } from '../utils'
 
 export const SourceVideos = () => {
   const { sourceList, fetchListSource } = useContext(AppContext)
-
-  // const [isModalVisible, setIsModalVisible] = useState(false);
-  // const [renameValue, setRenameValue] = useState("")
-  // const [currentItem, setCurrentItem] = useState("")
 
   useEffect(() => {
     fetchListSource()
   }, [])
 
-  // const handleRename = useCallback((item: string) => {
-  //     setCurrentItem(item)
-  //     setRenameValue(item)
-  //     setIsModalVisible(true);
-  // }, [])
-
   const handleDownload = useCallback((item: string) => {
     const a = document.createElement('a')
-    a.href = `${baseURLHost}/videos/${item}`
+    a.href = `${baseURLHost}/videos/${getUid()}/${item}`
     a.download = item
     a.click()
   }, [])
 
   const handleView = useCallback((item: string) => {
-    window.open(`${baseURLHost}/videos/${item}`)
+    window.open(`${baseURLHost}/videos/${getUid()}/${item}`)
   }, [])
 
   const handleDelete = useCallback((item: string) => {
@@ -49,26 +40,6 @@ export const SourceVideos = () => {
     })
   }, [])
 
-  // const handleOk = async () => {
-
-  //     const res = await rename(currentItem, renameValue)
-  //     if (res.data.code !== 0) {
-  //         message.error(res.data.message)
-  //         return
-  //     }
-  //     await fetchListOut()
-  //     message.success("修改成功")
-
-  //     setIsModalVisible(false);
-  //     setCurrentItem("")
-  //     setRenameValue("")
-  // };
-
-  // const handleCancel = () => {
-  //     setIsModalVisible(false);
-  //     setCurrentItem("")
-  //     setRenameValue("")
-  // };
   return (
     <>
       <List
@@ -77,7 +48,6 @@ export const SourceVideos = () => {
         renderItem={(item) => (
           <List.Item
             actions={[
-              // <a key="list-loadmore-edit" onClick={() => handleRename(item)}>重命名</a>,
               <a key="list-loadmore-more" onClick={() => handleDownload(item)}>
                 下载
               </a>,
@@ -102,9 +72,6 @@ export const SourceVideos = () => {
           </List.Item>
         )}
       />
-      {/* <Modal title="重命名" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
-            <Input value={renameValue} onChange={(e) => setRenameValue(e.target.value)} />
-        </Modal> */}
     </>
   )
 }

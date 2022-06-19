@@ -1,5 +1,5 @@
 import { Tabs, Button, Upload, Modal, UploadProps, message, Row } from 'antd'
-import { useCallback, useState } from 'react'
+import { useCallback, useContext, useState } from 'react'
 import { baseURL, listSource, clearDbAndSourceVideo, existVideo } from '../services'
 import React from 'react'
 import { OutputVideos } from './OutputVideos'
@@ -7,6 +7,8 @@ import { SourceVideos } from './SourceVideos'
 
 import { UploadChangeParam } from 'antd/lib/upload'
 import { UploadFile } from 'antd/lib/upload/interface'
+import { AppContext } from '../context'
+import { getUid } from '../utils'
 
 const TabPane = Tabs.TabPane
 
@@ -14,6 +16,9 @@ const options: UploadProps = {
   name: 'file',
   action: `${baseURL}/upload`,
   accept: '.mp4',
+  headers: {
+    "token": getUid()
+  },
   beforeUpload: async (file) => {
     const res = await existVideo(file.name)
     if (res.data.data) {
@@ -25,24 +30,18 @@ const options: UploadProps = {
 }
 
 export const FileListWrapper = () => {
-  const [outputList, setOutputList] = useState<string[]>([])
-  const [sourceList, setSourceList] = useState<string[]>([])
+  const { fetchListSource } = useContext(AppContext)
 
-  const fetchListSource = useCallback(async () => {
-    const res = await listSource()
-    setSourceList(res.data.data)
-  }, [])
-
-  const handleClear = useCallback(() => {
-    Modal.confirm({
-      title: '确定要清空吗？',
-      content: '清空后不可恢复',
-      onOk: async () => {
-        await clearDbAndSourceVideo()
-        location.reload()
-      },
-    })
-  }, [])
+  // const handleClear = useCallback(() => {
+  //   Modal.confirm({
+  //     title: '确定要清空吗？',
+  //     content: '清空后不可恢复',
+  //     onOk: async () => {
+  //       await clearDbAndSourceVideo()
+  //       location.reload()
+  //     },
+  //   })
+  // }, [])
 
   const handleFileChange: (info: UploadChangeParam<UploadFile<any>>) => void = (info) => {
     if (info.file.status === 'done') {
@@ -56,9 +55,9 @@ export const FileListWrapper = () => {
       <Upload {...options} onChange={handleFileChange}>
         <Button>上传视频</Button>
       </Upload>
-      <Button danger onClick={handleClear} style={{ marginLeft: 10 }}>
+      {/* <Button danger onClick={handleClear} style={{ marginLeft: 10 }}>
         清空数据库
-      </Button>
+      </Button> */}
     </Row>
   )
 

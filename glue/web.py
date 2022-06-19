@@ -25,7 +25,7 @@ class MainHandler(tornado.web.RequestHandler):
     async def post(self):
         data = json.loads(self.request.body.decode('utf-8'))
         print(data)
-        inputs = DocumentArray([Document(uri=file["uri"], id=os.path.basename(file["uri"]))  for file in data["files"] ])
+        inputs = DocumentArray([Document(uri=file["uri"], id=data["uid"] + '|**|' + os.path.basename(file["uri"]))  for file in data["files"] ])
         t1 = time.time()
         async for resp in c.post('/index', inputs=inputs):
             t2 = time.time()
@@ -49,6 +49,7 @@ class SearchHandler(tornado.web.RequestHandler):
         async for resp in c.post('/search', inputs=inputs, parameters={
             "thod": data["thod"] if "thod" in data else None,
             "doc_ids": data["doc_ids"] if "doc_ids" in data else None,
+            "uid": data["uid"]
             }):
             t2 = time.time()
             print("cost:", t2 - t1)

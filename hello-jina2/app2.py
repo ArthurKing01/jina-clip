@@ -24,8 +24,11 @@ def getTime(t: int):
     print (t_str)
     return t_str
 
-def cutVideo(start_t: str, length: int, input: str, output: str):
-    os.system(f'ffmpeg -ss {start_t} -i {input} -t {length} -c:v copy -c:a copy static/output/{output}')
+def cutVideo(start_t: str, length: int, input: str, output: str, uid: str):
+    user_dir = os.path.join('static', 'output', uid)
+    if not os.path.exists(user_dir):
+        os.mkdir(user_dir)
+    os.system(f'ffmpeg -ss {start_t} -i {input} -t {length} -c:v copy -c:a copy {user_dir}/{output}')
 
 def check_search(resp: DataRequest):
     for i, doc in enumerate(resp.docs):

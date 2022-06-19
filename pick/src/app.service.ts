@@ -46,16 +46,24 @@ export class AppService {
     return 'Hello World!';
   }
 
-  listOutput(): ResponseEntity<string[]> {
-    const files = fs.readdirSync(outputDir)
+  listOutput(uid: string): ResponseEntity<string[]> {
+    const userDir = path.join(outputDir, uid)
+    if (!fs.existsSync(userDir)) {
+      fs.mkdirSync(userDir)
+    }
+    const files = fs.readdirSync(userDir)
     return {
       code: 0,
       message: 'ok',
       data: files.filter(f => f.endsWith('.mp4'))
     }
   }
-  listSource(): ResponseEntity<string[]> {
-    const files = fs.readdirSync(videosDir)
+  listSource(uid: string): ResponseEntity<string[]> {
+    const userDir = path.join(videosDir, uid)
+    if (!fs.existsSync(userDir)) {
+      fs.mkdirSync(userDir)
+    }
+    const files = fs.readdirSync(userDir)
     return {
       code: 0,
       message: 'ok',
@@ -63,13 +71,17 @@ export class AppService {
     }
   }
 
-  listVideos() {
-    return fs.readdirSync(videosDir).filter(f => f.endsWith('.mp4'))
+  listVideos(uid: string) {
+    const userDir = path.join(videosDir, uid)
+    if (!fs.existsSync(userDir)) {
+      fs.mkdirSync(userDir)
+    }
+    return fs.readdirSync(userDir).filter(f => f.endsWith('.mp4'))
   }
 
-  rename(source: string, target: string): ResponseEntity<void> {
+  rename(source: string, target: string, uid: string): ResponseEntity<void> {
     try {
-      fs.renameSync(path.join(outputDir, source), path.join(outputDir, target))
+      fs.renameSync(path.join(outputDir, uid, source), path.join(outputDir, uid, target))
       return {
         code: 0,
         message: 'ok'
@@ -82,9 +94,9 @@ export class AppService {
     }
   }
 
-  delete(source: string): ResponseEntity<void> {
-    const targetSource = path.resolve(outputDir, source)
-    if (targetSource.startsWith(outputDir)) {
+  delete(source: string, uid: string): ResponseEntity<void> {
+    const targetSource = path.resolve(outputDir, uid, source)
+    if (targetSource.startsWith(path.join(outputDir, uid))) {
       try {
         fs.unlinkSync(targetSource)
         return {
@@ -105,8 +117,8 @@ export class AppService {
       }
     }
   }
-  exist(source: string): ResponseEntity<boolean> {
-    const targetSource = path.resolve(videosDir, source)
+  exist(source: string, uid: string): ResponseEntity<boolean> {
+    const targetSource = path.resolve(videosDir, uid, source)
     return {
       code: 0,
       message: 'ok',
@@ -114,17 +126,17 @@ export class AppService {
     }
 
   }
-  async clear(): Promise<ResponseEntity> {
-    this.jinaProcess.kill("SIGINT")
-    fse.removeSync(path.join(jinaDir, 'workspace'))
-    const videos = this.listVideos()
-    for (const video of videos) {
-      fse.removeSync(path.join(videosDir, video))
-    }
-    await sleep(10)
-    console.log(this.jinaProcess.killed)
-    this.launchJina()
-    await sleep(15)
+  async clear(uid: string): Promise<ResponseEntity> {
+    // this.jinaProcess.kill("SIGINT")
+    // fse.removeSync(path.join(jinaDir, 'workspace'))
+    // const videos = this.listVideos(uid)
+    // for (const video of videos) {
+    //   fse.removeSync(path.join(videosDir, video))
+    // }
+    // await sleep(10)
+    // console.log(this.jinaProcess.killed)
+    // this.launchJina()
+    // await sleep(15)
     return {
       code: 0,
       message: "ok"

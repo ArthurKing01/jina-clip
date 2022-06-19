@@ -2,6 +2,7 @@ import { Input, List, message, Modal } from "antd"
 import { useCallback, useContext, useEffect, useState } from "react"
 import { AppContext } from "../context"
 import { baseURLHost, deleteOutputVideo, listOutput, rename } from "../services"
+import { getUid } from "../utils"
 
 export const OutputVideos = () => {
     
@@ -25,13 +26,13 @@ export const OutputVideos = () => {
 
     const handleDownload = useCallback((item: string) => {
         const a = document.createElement('a')
-        a.href = `${baseURLHost}/output/${item}`
+        a.href = `${baseURLHost}/output/${getUid()}/${item}`
         a.download = item
         a.click()
     }, [])
 
     const handleView = useCallback((item: string) => {
-        window.open(`${baseURLHost}/output/${item}`)
+        window.open(`${baseURLHost}/output/${getUid()}/${item}`)
     }, [])
 
     const handleDelete = useCallback((item: string) => {

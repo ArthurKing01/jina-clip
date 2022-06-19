@@ -1,5 +1,5 @@
 import axios from "axios"
-
+import { getUid } from "../utils"
 export const baseURL = "http://localhost:3001/api"
 export const baseURLHost = `http://localhost:3001`
 
@@ -22,6 +22,8 @@ export type TSearchResultItem = {
         }
     }[]
 }
+
+axios.defaults.headers.common["token"] = getUid()
 
 export const search = (texts: string[], thod: number, doc_ids?: string[]) => axios.post<ResponseEntity<TSearchResultItem[]>>(`${baseURL}/search`, {
     texts,
