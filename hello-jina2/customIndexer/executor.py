@@ -224,7 +224,9 @@ class SimpleIndexer(Executor):
                 rightIndex = i
             else:
                 break
-        return leftIndex, rightIndex, d_result[maxIndex]
+        if (rightIndex - leftIndex) > 60:
+            return self.getRange(maxItem, result, thod/2, ignore_range)
+        return leftIndex, max(rightIndex, leftIndex + 10), d_result[maxIndex]
 
     def score(self, image_features, text_features):
 
