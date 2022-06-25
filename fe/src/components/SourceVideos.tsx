@@ -28,7 +28,7 @@ export const SourceVideos = () => {
       content: '删除后不可恢复',
       onOk: async () => {
         const res = await deleteSourceVideo({
-          doc_ids: [item],
+          doc_ids: [getUid() + '|**|' + item],
         })
         if (res.data.code === 0) {
           await fetchListSource()
