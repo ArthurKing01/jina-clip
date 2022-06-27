@@ -20,7 +20,7 @@ export class AppService {
   launchTornado() {
     this.tornadoProcess = spawn('python', [path.join(glueDir, 'web.py')])
     this.tornadoProcess.stderr.on('data', data => {
-      console.log(data.toString())
+      console.log("[From Tonardo]",data.toString())
     })
     this.tornadoProcess.on('close', code => {
       Logger.log("tornadoProcess close with " + code)
@@ -28,14 +28,15 @@ export class AppService {
   }
 
   launchJina() {
+    Logger.log("------------------------------------- Waiting for Jina Flow launch --------------------------------")
     this.jinaProcess = spawn('python', [path.join(jinaDir, 'app2.py')], {
       cwd: jinaDir
     })
     this.jinaProcess.stdout.on('data', data => {
-      console.log(data.toString())
+      console.log('[From Jina]\n', data.toString())
     })
     this.jinaProcess.stderr.on('data', data => {
-      console.log(data.toString())
+      console.log('[From Jina]\n', data.toString())
     })
     this.jinaProcess.on('close', code => {
       Logger.log("jinaProcess close with " + code)
