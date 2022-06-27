@@ -27,8 +27,8 @@ python版本：3.9.x
 `cd pick && yarn`
 
 ## 启动
-在pick目录下, 等待Jina启动，出现 `Flow is ready to serve!` 后再进行下一步
-`yarn start`
+在pick目录下, `yarn start`,等待Jina启动，出现 `Flow is ready to serve!` 后再进行下一步
+
 
 ## 访问地址
 `http://localhost:3001/public`
